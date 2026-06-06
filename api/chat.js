@@ -1,6 +1,7 @@
 const { GoogleGenAI } = require('@google/genai');
 
 module.exports = async (req, res) => {
+  // Configuração de Cabeçalhos CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,24 +15,31 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { message } = req.body;
+    // Garante a leitura do corpo da requisição independentemente do formato
+    let body = req.body;
+    if (typeof body === 'string') {
+      body = JSON.parse(body);
+    }
+    
+    const { message } = body || {};
+
     if (!message) {
-      return res.status(400).json({ error: 'Mensagem em falta' });
+      return res.status(400).json({ error: 'O campo "message" está vazio ou ausente.' });
     }
 
-    // Inicialização direta do novo ecossistema com suporte ao prefixo AQ.
-    const ai = new GoogleGenAI();
+    // CORREÇÃO AQUI: Passar explicitamente a chave no objeto de configuração
+    // Isto impede que o SDK tente adivinhar o projeto Google Cloud e falhe com chaves "AQ."
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    // Alteração obrigatória para a arquitetura Gemini 2.5
     const aiResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', 
+      model: 'gemini-2.5-flash',
       contents: message,
     });
 
     return res.status(200).json({ response: aiResponse.text });
 
   } catch (error) {
-    console.error('Erro na execução:', error);
+    console.error('Erro detalhado na execução:', error);
     return res.status(500).json({ 
       error: 'Falha ao processar requisição na API', 
       details: error.message 
