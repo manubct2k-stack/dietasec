@@ -1,19 +1,12 @@
 const { GoogleGenAI } = require('@google/genai');
 
 module.exports = async (req, res) => {
-  // Configuração de Cabeçalhos CORS para evitar bloqueios no navegador
-  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Trata requisições OPTIONS (Pre-flight) do navegador
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
@@ -22,17 +15,16 @@ module.exports = async (req, res) => {
 
   try {
     const { message } = req.body;
-    
     if (!message) {
-      return res.status(400).json({ error: 'Mensagem em falta no corpo da requisição' });
+      return res.status(400).json({ error: 'Mensagem em falta' });
     }
 
-    // Inicializa o cliente dentro do handler para isolar falhas de runtime
-    // Procura automaticamente por process.env.GEMINI_API_KEY
+    // Inicialização direta do novo ecossistema com suporte ao prefixo AQ.
     const ai = new GoogleGenAI();
 
+    // Alteração obrigatória para a arquitetura Gemini 2.5
     const aiResponse = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash', 
       contents: message,
     });
 
