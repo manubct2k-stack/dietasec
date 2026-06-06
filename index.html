@@ -1,324 +1,556 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NutriMaputo — Plano de Dieta Personalizado</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --green-dark: #1a3a2a; --green-mid: #2d6645; --green-light: #4a9e6b;
-    --green-pale: #c8e6d4; --green-faint: #f0f9f3; --gold: #d4a843;
-    --gold-light: #f5e4b0; --cream: #faf8f3; --text: #1c2b22;
-    --text-muted: #5a7060; --border: rgba(45,102,69,0.15); --white: #ffffff;
-    --red: #c0392b; --shadow: 0 4px 24px rgba(26,58,42,0.10);
-  }
-  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; overflow-x: hidden; }
-  body::before { content: ''; position: fixed; top:0; left:0; right:0; height:340px; background: linear-gradient(160deg,var(--green-dark) 0%,var(--green-mid) 60%,var(--green-light) 100%); z-index:0; }
-  body::after { content: ''; position: fixed; top:0; left:0; right:0; height:340px; background-image: radial-gradient(ellipse at 20% 50%,rgba(212,168,67,0.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(255,255,255,0.06) 0%,transparent 50%); z-index:0; }
-  .wrapper { position:relative; z-index:1; max-width:820px; margin:0 auto; padding:0 20px 60px; }
-  .header { padding:48px 0 36px; text-align:center; }
-  .header-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); border-radius:100px; padding:6px 16px; font-size:12px; font-weight:500; color:rgba(255,255,255,0.85); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:20px; }
-  h1 { font-family:'Playfair Display',serif; font-size:clamp(32px,6vw,52px); font-weight:700; color:#fff; line-height:1.15; margin-bottom:14px; }
-  h1 em { font-style:normal; color:var(--gold); }
-  .header-sub { font-size:15px; color:rgba(255,255,255,0.72); font-weight:300; max-width:480px; margin:0 auto; line-height:1.6; }
-  .card { background:var(--white); border-radius:24px; box-shadow:var(--shadow); padding:40px; margin-top:32px; }
-  .proxy-banner { background:#fff8e6; border:1.5px solid #f0d070; border-radius:16px; padding:20px 24px; margin-top:32px; display:flex; gap:16px; align-items:flex-start; }
-  .proxy-banner-icon { font-size:28px; flex-shrink:0; margin-top:2px; }
-  .proxy-banner h3 { font-size:15px; font-weight:500; color:#7a5a10; margin-bottom:8px; }
-  .proxy-banner p { font-size:13px; color:#8a6a20; line-height:1.5; margin-bottom:10px; }
-  .proxy-input-row { display:flex; gap:10px; align-items:center; }
-  .proxy-input { flex:1; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); background:#fff; border:1.5px solid #e0c060; border-radius:10px; padding:10px 14px; outline:none; }
-  .proxy-input:focus { border-color:var(--gold); }
-  .proxy-btn { background:var(--gold); color:#fff; border:none; border-radius:10px; padding:10px 18px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; transition:background 0.2s; }
-  .proxy-btn:hover { background:#b8902e; }
-  .proxy-saved { display:none; align-items:center; gap:8px; font-size:13px; color:var(--green-mid); font-weight:500; margin-top:10px; }
-  .proxy-saved.active { display:flex; }
-  .card-title { font-family:'Playfair Display',serif; font-size:22px; font-weight:600; color:var(--green-dark); margin-bottom:28px; display:flex; align-items:center; gap:10px; }
-  .card-title::before { content:''; display:block; width:4px; height:24px; background:var(--green-light); border-radius:2px; }
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  .form-group { display:flex; flex-direction:column; gap:8px; }
-  .form-group.full { grid-column:1/-1; }
-  label { font-size:13px; font-weight:500; color:var(--text-muted); letter-spacing:0.04em; text-transform:uppercase; }
-  input[type="text"],input[type="number"],select { font-family:'DM Sans',sans-serif; font-size:15px; color:var(--text); background:var(--green-faint); border:1.5px solid var(--border); border-radius:12px; padding:13px 16px; outline:none; transition:border-color 0.2s,box-shadow 0.2s; width:100%; -webkit-appearance:none; }
-  input[type="text"]:focus,input[type="number"]:focus,select:focus { border-color:var(--green-light); box-shadow:0 0 0 3px rgba(74,158,107,0.12); background:var(--white); }
-  input::placeholder { color:#aac0b2; }
-  .radio-group { display:flex; gap:12px; flex-wrap:wrap; }
-  .radio-option { flex:1; min-width:100px; }
-  .radio-option input[type="radio"] { display:none; }
-  .radio-option label { display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; border:1.5px solid var(--border); border-radius:12px; cursor:pointer; font-size:14px; font-weight:500; color:var(--text-muted); text-transform:none; letter-spacing:normal; background:var(--green-faint); transition:all 0.2s; }
-  .radio-option input[type="radio"]:checked+label { background:var(--green-mid); border-color:var(--green-mid); color:#fff; }
-  .obj-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-  .obj-option input[type="radio"] { display:none; }
-  .obj-option label { display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 12px; border:1.5px solid var(--border); border-radius:14px; cursor:pointer; font-size:13px; font-weight:500; color:var(--text-muted); text-transform:none; letter-spacing:normal; background:var(--green-faint); transition:all 0.2s; text-align:center; }
-  .obj-option label .obj-icon { font-size:24px; line-height:1; }
-  .obj-option input[type="radio"]:checked+label { border-color:var(--green-mid); color:var(--green-dark); box-shadow:0 0 0 3px rgba(45,102,69,0.10); }
-  .activity-option input[type="radio"] { display:none; }
-  .activity-option label { display:block; padding:12px 16px; border:1.5px solid var(--border); border-radius:12px; cursor:pointer; color:var(--text-muted); text-transform:none; letter-spacing:normal; background:var(--green-faint); transition:all 0.2s; margin-bottom:8px; }
-  .activity-option label strong { display:block; font-weight:500; color:var(--text); font-size:14px; margin-bottom:2px; }
-  .activity-option label small { font-size:12px; }
-  .activity-option input[type="radio"]:checked+label { background:var(--green-mid); border-color:var(--green-mid); color:rgba(255,255,255,0.85); }
-  .activity-option input[type="radio"]:checked+label strong { color:#fff; }
-  .divider { height:1px; background:var(--border); margin:32px 0; }
-  .btn { width:100%; padding:18px; background:var(--green-mid); color:#fff; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:500; border:none; border-radius:14px; cursor:pointer; transition:all 0.2s; letter-spacing:0.02em; display:flex; align-items:center; justify-content:center; gap:10px; margin-top:8px; }
-  .btn:hover { background:var(--green-dark); transform:translateY(-1px); box-shadow:0 6px 20px rgba(26,58,42,0.2); }
-  .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
-  .loading-state { display:none; text-align:center; padding:48px 20px; }
-  .loading-state.active { display:block; }
-  .spinner { width:48px; height:48px; border:3px solid var(--green-pale); border-top-color:var(--green-mid); border-radius:50%; animation:spin 0.9s linear infinite; margin:0 auto 20px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .loading-text { font-family:'Playfair Display',serif; font-size:20px; color:var(--green-dark); margin-bottom:8px; }
-  .loading-sub { font-size:14px; color:var(--text-muted); line-height:1.6; }
-  .result-section { display:none; margin-top:32px; }
-  .result-section.active { display:block; }
-  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-  .stat-card { background:var(--green-faint); border:1px solid var(--border); border-radius:16px; padding:16px; text-align:center; }
-  .stat-value { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--green-dark); line-height:1; margin-bottom:4px; }
-  .stat-unit { font-size:12px; color:var(--green-light); font-weight:500; }
-  .stat-label { font-size:11px; color:var(--text-muted); margin-top:4px; text-transform:uppercase; letter-spacing:0.06em; }
-  .macros-bar { display:flex; height:10px; border-radius:100px; overflow:hidden; margin:12px 0 8px; gap:2px; }
-  .macro-seg { height:100%; border-radius:100px; }
-  .macro-prot { background:var(--green-mid); }
-  .macro-carb { background:var(--gold); }
-  .macro-fat { background:#e07b3a; }
-  .macro-legend { display:flex; gap:16px; font-size:12px; color:var(--text-muted); margin-bottom:4px; }
-  .macro-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
-  .plan-content { font-size:15px; line-height:1.8; color:var(--text); }
-  .plan-content h2 { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; color:var(--green-dark); margin:28px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--green-pale); }
-  .plan-content h3 { font-size:13px; font-weight:500; color:var(--green-mid); margin:18px 0 8px; text-transform:uppercase; letter-spacing:0.06em; }
-  .plan-content ul { list-style:none; padding:0; margin:0 0 12px; }
-  .plan-content li { padding:7px 0 7px 20px; position:relative; border-bottom:1px solid rgba(45,102,69,0.07); font-size:14px; }
-  .plan-content li:last-child { border-bottom:none; }
-  .plan-content li::before { content:'→'; position:absolute; left:0; color:var(--green-light); font-size:13px; }
-  .plan-content strong { color:var(--green-dark); font-weight:500; }
-  .plan-content p { margin-bottom:12px; font-size:14px; color:var(--text-muted); line-height:1.7; }
-  .tip-box { background:var(--gold-light); border:1px solid rgba(212,168,67,0.3); border-radius:14px; padding:18px 20px; font-size:14px; color:#7a5a10; line-height:1.6; }
-  .tip-box strong { color:#5a3f08; }
-  .alert-error { background:#fff0f0; border:1px solid #f5c6c6; border-radius:12px; padding:16px 20px; color:var(--red); font-size:14px; display:none; margin-top:16px; line-height:1.5; }
-  .alert-error.active { display:block; }
-  .btn-secondary { background:transparent; border:1.5px solid var(--green-mid); color:var(--green-mid); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; padding:12px 24px; border-radius:10px; cursor:pointer; transition:all 0.2s; margin-top:24px; }
-  .btn-secondary:hover { background:var(--green-faint); }
-  @media(max-width:600px) {
-    .card { padding:24px 20px; }
-    .form-grid { grid-template-columns:1fr; }
-    .form-group.full { grid-column:1; }
-    .obj-grid { grid-template-columns:1fr 1fr; }
-    .stats-grid { grid-template-columns:1fr 1fr; }
-    .proxy-input-row { flex-direction:column; }
-    .proxy-input,.proxy-btn { width:100%; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriVida — Plano Alimentar Personalizado</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1a0f;
+      --surface: #122116;
+      --card: #172d1c;
+      --accent: #6fcf6f;
+      --accent2: #a8e6a3;
+      --gold: #c8a84b;
+      --text: #e8f5e3;
+      --muted: #7a9e7a;
+      --border: #2a4a2a;
+      --danger: #e06060;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 20%, rgba(111,207,111,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 80% 80%, rgba(200,168,75,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .noise {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    header {
+      position: relative; z-index: 10;
+      padding: 2.5rem 2rem 0;
+      text-align: center;
+      animation: fadeDown 0.9s ease both;
+    }
+
+    .logo-leaf { font-size: 2.2rem; margin-bottom: 0.4rem; display: block; }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    header h1 span { color: var(--gold); font-style: italic; }
+
+    header p {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-top: 0.6rem;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+    }
+
+    .divider {
+      width: 60px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      margin: 1.4rem auto 0;
+    }
+
+    main {
+      position: relative; z-index: 10;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    .card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--accent2);
+      margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+    }
+
+    input[type="text"], input[type="number"] {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      width: 100%;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(111,207,111,0.12);
+    }
+    input::placeholder { color: #3a5a3a; }
+
+    .goal-section { margin-top: 1.5rem; }
+    .goal-section > label {
+      display: block; margin-bottom: 0.7rem;
+      font-size: 0.78rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted);
+    }
+    .goal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+    .goal-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      padding: 1rem 0.8rem;
+      text-align: center;
+      transition: all 0.25s;
+    }
+    .goal-btn .icon { font-size: 1.8rem; display: block; margin-bottom: 0.4rem; }
+    .goal-btn .lbl { font-weight: 500; display: block; }
+    .goal-btn .sub { font-size: 0.78rem; color: var(--muted); display: block; margin-top: 0.2rem; }
+    .goal-btn:hover { border-color: var(--accent); background: rgba(111,207,111,0.07); }
+    .goal-btn.active {
+      border-color: var(--accent);
+      background: rgba(111,207,111,0.12);
+      box-shadow: 0 0 0 3px rgba(111,207,111,0.15);
+    }
+    .goal-btn.muscle.active {
+      border-color: var(--gold);
+      background: rgba(200,168,75,0.1);
+      box-shadow: 0 0 0 3px rgba(200,168,75,0.15);
+    }
+
+    .btn-generate {
+      margin-top: 1.8rem;
+      width: 100%;
+      background: linear-gradient(135deg, #3a8a3a, #5cb85c);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-style: italic;
+      letter-spacing: 0.02em;
+      padding: 1rem 2rem;
+      transition: all 0.3s;
+    }
+    .btn-generate:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(92,184,92,0.3);
+    }
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 3rem 1rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .loading.visible { display: block; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    .loading p { color: var(--muted); font-size: 0.9rem; }
+    .loading-quote { color: var(--accent); font-family: 'Playfair Display', serif; font-style: italic; font-size: 1rem; margin-top: 0.5rem; }
+
+    #result { display: none; margin-top: 2rem; animation: fadeUp 0.7s ease both; }
+    #result.visible { display: block; }
+
+    .result-header {
+      background: linear-gradient(135deg, var(--card), #1e3820);
+      border: 1px solid var(--accent);
+      border-radius: 16px 16px 0 0;
+      padding: 1.5rem 1.8rem;
+      border-bottom: none;
+    }
+    .result-header .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #0a1a0a;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      margin-bottom: 0.6rem;
+    }
+    .result-header.muscle .badge { background: var(--gold); }
+    .result-header h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--accent2); }
+    .result-header.muscle h3 { color: #e8d090; }
+    .result-header p { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+
+    .result-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0 0 16px 16px;
+      padding: 1.8rem;
+      border-top: none;
+    }
+
+    .result-body h2 {
+      font-family: 'Playfair Display', serif;
+      color: var(--accent);
+      font-size: 1.15rem;
+      margin: 1.4rem 0 0.6rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .result-body h2:first-child { margin-top: 0; }
+    .result-body h3 {
+      color: var(--gold);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 1rem 0 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .result-body p { color: var(--text); line-height: 1.7; margin: 0.4rem 0; font-size: 0.95rem; }
+    .result-body ul { padding-left: 1.4rem; margin: 0.4rem 0; }
+    .result-body li { color: var(--text); line-height: 1.7; font-size: 0.95rem; margin: 0.2rem 0; }
+    .result-body strong { color: var(--accent2); font-weight: 600; }
+    .result-body em { color: var(--muted); font-style: italic; }
+
+    .meal-block {
+      background: rgba(111,207,111,0.04);
+      border: 1px solid rgba(111,207,111,0.15);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      margin: 0.6rem 0;
+    }
+    .meal-block.muscle-bg {
+      background: rgba(200,168,75,0.04);
+      border-color: rgba(200,168,75,0.15);
+    }
+
+    .btn-reset {
+      display: block; width: 100%; margin-top: 1.2rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.75rem;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+    .error-msg {
+      background: rgba(224,96,96,0.1);
+      border: 1px solid var(--danger);
+      border-radius: 10px;
+      color: #f5a0a0;
+      font-size: 0.88rem;
+      margin-top: 1rem;
+      padding: 0.8rem 1rem;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    footer {
+      position: relative; z-index: 10;
+      text-align: center;
+      padding: 0 1rem 2rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 520px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .goal-btns { grid-template-columns: 1fr; }
+      .field.full { grid-column: 1; }
+    }
+  </style>
 </head>
 <body>
-<div class="wrapper">
-  <div class="header">
-    <div class="header-badge">🇲🇿 Maputo · Moçambique</div>
-    <h1>Nutrição Feita<br>para <em>Ti</em></h1>
-    <p class="header-sub">Plano alimentar personalizado com ingredientes dos supermercados de Maputo, gerado por inteligência artificial.</p>
-  </div>
+  <div class="noise"></div>
 
-  <div class="proxy-banner" id="proxyBanner">
-    <div class="proxy-banner-icon">⚙️</div>
-    <div style="flex:1">
-      <h3>Configura o teu proxy Cloudflare (só uma vez)</h3>
-      <p>Cola o URL do teu Cloudflare Worker abaixo. Fica guardado no browser para sempre.</p>
-      <div class="proxy-input-row">
-        <input type="text" class="proxy-input" id="proxyUrl" placeholder="https://meu-worker.SEU-NOME.workers.dev" />
-        <button class="proxy-btn" onclick="guardarProxy()">Guardar</button>
-      </div>
-      <div class="proxy-saved" id="proxySaved">✅ URL guardado! Podes gerar o plano.</div>
-    </div>
-  </div>
+  <header>
+    <span class="logo-leaf">🌿</span>
+    <h1>Nutri<span>Vida</span></h1>
+    <p>Plano alimentar personalizado por Inteligência Artificial</p>
+    <div class="divider"></div>
+  </header>
 
-  <div class="card" id="formCard">
-    <div class="card-title">Os teus dados</div>
-    <div class="form-grid">
-      <div class="form-group full">
-        <label>O teu nome</label>
-        <input type="text" id="nome" placeholder="ex: Ana Machava" />
-      </div>
-      <div class="form-group">
-        <label>Idade</label>
-        <input type="number" id="idade" placeholder="ex: 28" min="12" max="99" />
-      </div>
-      <div class="form-group">
-        <label>Género</label>
-        <div class="radio-group">
-          <div class="radio-option"><input type="radio" name="genero" id="masc" value="masculino" checked /><label for="masc">♂ Masculino</label></div>
-          <div class="radio-option"><input type="radio" name="genero" id="fem" value="feminino" /><label for="fem">♀ Feminino</label></div>
+  <main>
+    <div class="card" id="formCard">
+      <h2>📋 Os seus dados</h2>
+      <div class="form-grid">
+        <div class="field full">
+          <label>Nome completo</label>
+          <input type="text" id="nome" placeholder="Ex: João Silva" />
+        </div>
+        <div class="field">
+          <label>Idade (anos)</label>
+          <input type="number" id="idade" placeholder="Ex: 28" min="10" max="99" />
+        </div>
+        <div class="field">
+          <label>Peso (kg)</label>
+          <input type="number" id="peso" placeholder="Ex: 75" min="30" max="300" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Altura (cm)</label>
+          <input type="number" id="altura" placeholder="Ex: 175" min="100" max="250" />
         </div>
       </div>
-      <div class="form-group">
-        <label>Altura (cm)</label>
-        <input type="number" id="altura" placeholder="ex: 165" min="100" max="230" />
+
+      <div class="goal-section">
+        <label>Objectivo</label>
+        <div class="goal-btns">
+          <button class="goal-btn" id="btnPerda" onclick="selectGoal('perda')">
+            <span class="icon">🔥</span>
+            <span class="lbl">Perder Peso</span>
+            <span class="sub">Défice calórico saudável</span>
+          </button>
+          <button class="goal-btn muscle" id="btnMassa" onclick="selectGoal('massa')">
+            <span class="icon">💪</span>
+            <span class="lbl">Ganho de Massa</span>
+            <span class="sub">Superavit calórico proteico</span>
+          </button>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Peso actual (kg)</label>
-        <input type="number" id="peso" placeholder="ex: 70" min="30" max="300" />
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <button class="btn-generate" id="btnGerar" onclick="gerarPlano()">
+        ✨ Gerar Plano Alimentar
+      </button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>A IA está a criar o seu plano personalizado…</p>
+      <div class="loading-quote" id="loadingQuote"></div>
+    </div>
+
+    <div id="result">
+      <div class="result-header" id="resultHeader">
+        <div class="badge" id="resultBadge">Plano Alimentar</div>
+        <h3 id="resultTitle">Plano Personalizado</h3>
+        <p id="resultSub"></p>
       </div>
+      <div class="result-body" id="resultBody"></div>
+      <button class="btn-reset" onclick="resetForm()">↺ Criar novo plano</button>
     </div>
-    <div class="divider"></div>
-    <div class="form-group" style="margin-bottom:24px">
-      <label>Nível de actividade física</label>
-      <div style="margin-top:8px">
-        <div class="activity-option"><input type="radio" name="actividade" id="sed" value="sedentario" checked /><label for="sed"><strong>Sedentário</strong><small>Trabalho de escritório, pouco exercício</small></label></div>
-        <div class="activity-option"><input type="radio" name="actividade" id="leve" value="leve" /><label for="leve"><strong>Levemente activo</strong><small>Exercício leve 1–3 dias por semana</small></label></div>
-        <div class="activity-option"><input type="radio" name="actividade" id="mod" value="moderado" /><label for="mod"><strong>Moderadamente activo</strong><small>Exercício moderado 3–5 dias por semana</small></label></div>
-        <div class="activity-option"><input type="radio" name="actividade" id="int" value="intenso" /><label for="int"><strong>Muito activo</strong><small>Exercício intenso 6–7 dias por semana</small></label></div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Objectivo principal</label>
-      <div class="obj-grid" style="margin-top:8px">
-        <div class="obj-option"><input type="radio" name="objetivo" id="emagrecer" value="perda de peso" checked /><label for="emagrecer"><span class="obj-icon">⚖️</span>Perder Peso</label></div>
-        <div class="obj-option"><input type="radio" name="objetivo" id="manter" value="manutenção de peso" /><label for="manter"><span class="obj-icon">🎯</span>Manter Peso</label></div>
-        <div class="obj-option"><input type="radio" name="objetivo" id="ganhar" value="ganho de massa muscular" /><label for="ganhar"><span class="obj-icon">💪</span>Ganhar Massa</label></div>
-        <div class="obj-option"><input type="radio" name="objetivo" id="saude" value="saúde geral e bem-estar" /><label for="saude"><span class="obj-icon">❤️</span>Saúde Geral</label></div>
-        <div class="obj-option"><input type="radio" name="objetivo" id="energia" value="mais energia e disposição" /><label for="energia"><span class="obj-icon">⚡</span>Mais Energia</label></div>
-        <div class="obj-option"><input type="radio" name="objetivo" id="diabetes" value="controlo de açúcar no sangue" /><label for="diabetes"><span class="obj-icon">🩺</span>Controlo Glicémico</label></div>
-      </div>
-    </div>
-    <div class="divider"></div>
-    <button class="btn" onclick="gerarPlano()" id="btnGerar"><span>✨</span> Gerar meu plano de dieta</button>
-    <div class="alert-error" id="erroMsg"></div>
-  </div>
+  </main>
 
-  <div class="card loading-state" id="loadingCard">
-    <div class="spinner"></div>
-    <div class="loading-text">A preparar o teu plano…</div>
-    <div class="loading-sub">A IA está a calcular as tuas necessidades nutricionais<br>e a seleccionar ingredientes disponíveis em Maputo.</div>
-  </div>
+  <footer>
+    NutriVida &copy; 2025 · Este plano é informativo e não substitui consulta com nutricionista.
+  </footer>
 
-  <div class="result-section" id="resultSection">
-    <div class="card">
-      <div class="card-title">O teu perfil nutricional</div>
-      <div class="stats-grid" id="statsGrid"></div>
-      <div class="macros-bar" id="macrosBar"></div>
-      <div class="macro-legend" id="macroLegend"></div>
-    </div>
-    <div class="card" style="margin-top:20px">
-      <div class="card-title">O teu plano alimentar</div>
-      <div class="plan-content" id="planContent"></div>
-      <button class="btn-secondary" onclick="novoPlano()">← Criar novo plano</button>
-    </div>
-  </div>
-</div>
+  <script>
+    let selectedGoal = null;
 
-<script>
-const SYSTEM_PROMPT = `Es um nutricionista especializado em alimentacao africana, especificamente para Mocambique. Crias planos de dieta detalhados usando APENAS ingredientes dos supermercados de Maputo (Shoprite, Game, TM, Kero) e mercados locais. INGREDIENTES: Proteinas: frango, tilapia, camarao, atum enlatado, feijao nhemba, ovos, carne de vaca, amendoim. Hidratos: arroz, xima, pao, batata doce, mandioca, batata. Legumes: couve, espinafres, tomate, cebola, alho, cenoura, abobora, quiabo, beringela. Frutas: manga, papaia, banana, laranja, limao, abacate, ananás, caju. Gorduras: oleo de girassol, oleo de coco, amendoim, coco. Laticinios: leite Steri Milk, iogurte natural, queijo. Temperos: sal, coentros, piri-piri, caril, curcuma, gengibre. Responde em portugues de Mocambique. Inclui custos em Meticais (MZN). USA ESTES TITULOS EXACTOS: ## 🧮 Analise Nutricional ## 📊 Macronutrientes Diarios ## 🌅 Pequeno-Almoco ## ☀️ Lanche da Manha ## 🍽️ Almoco ## 🌿 Lanche da Tarde ## 🌙 Jantar ## 💧 Hidratacao ## 🛒 Lista de Compras Semanal ## ⚠️ Conselhos Importantes ## 💰 Custo Estimado Semanal`;
+    const quotes = [
+      '"Que o alimento seja o teu remédio" — Hipócrates',
+      '"Cuida do teu corpo, é o único lugar onde tens de viver."',
+      '"Uma boa nutrição é o alicerce da saúde."',
+      '"O que comes torna-te no que és."',
+    ];
 
-window.addEventListener('load', () => {
-  const saved = localStorage.getItem('nutriMaputoProxy');
-  if (saved) {
-    document.getElementById('proxyUrl').value = saved;
-    document.getElementById('proxySaved').classList.add('active');
-  }
-});
+    function selectGoal(goal) {
+      selectedGoal = goal;
+      document.getElementById('btnPerda').classList.toggle('active', goal === 'perda');
+      document.getElementById('btnMassa').classList.toggle('active', goal === 'massa');
+      showError('');
+    }
 
-function guardarProxy() {
-  const url = document.getElementById('proxyUrl').value.trim();
-  if (!url.startsWith('http')) { alert('URL invalido. Deve comecar com https://'); return; }
-  localStorage.setItem('nutriMaputoProxy', url);
-  document.getElementById('proxySaved').classList.add('active');
-}
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.classList.toggle('visible', !!msg);
+    }
 
-function getProxyUrl() {
-  return localStorage.getItem('nutriMaputoProxy') || document.getElementById('proxyUrl').value.trim();
-}
+    function calcIMC(peso, altura) {
+      const h = altura / 100;
+      return (peso / (h * h)).toFixed(1);
+    }
 
-async function gerarPlano() {
-  const proxyUrl = getProxyUrl();
-  if (!proxyUrl) { mostrarErro('Por favor, guarda o URL do teu Cloudflare Worker primeiro.'); return; }
-  const nome = document.getElementById('nome').value.trim();
-  const idade = parseInt(document.getElementById('idade').value);
-  const altura = parseInt(document.getElementById('altura').value);
-  const peso = parseInt(document.getElementById('peso').value);
-  const genero = document.querySelector('input[name="genero"]:checked').value;
-  const actividade = document.querySelector('input[name="actividade"]:checked').value;
-  const objetivo = document.querySelector('input[name="objetivo"]:checked').value;
-  document.getElementById('erroMsg').classList.remove('active');
-  if (!nome) { mostrarErro('Por favor, introduz o teu nome.'); return; }
-  if (!idade || idade<12 || idade>99) { mostrarErro('Introduz uma idade valida (12-99 anos).'); return; }
-  if (!altura || altura<100 || altura>230) { mostrarErro('Introduz uma altura valida em cm.'); return; }
-  if (!peso || peso<30 || peso>300) { mostrarErro('Introduz um peso valido em kg.'); return; }
-  const bmi = (peso/((altura/100)**2)).toFixed(1);
-  let tmb = genero==='masculino' ? Math.round(88.362+13.397*peso+4.799*altura-5.677*idade) : Math.round(447.593+9.247*peso+3.098*altura-4.330*idade);
-  const fatores = {sedentario:1.2,leve:1.375,moderado:1.55,intenso:1.725};
-  const tdee = Math.round(tmb*fatores[actividade]);
-  let calorias = tdee;
-  if (objetivo==='perda de peso') calorias=tdee-500;
-  else if (objetivo==='ganho de massa muscular') calorias=tdee+300;
-  const proteina = Math.round(peso*1.8);
-  const gordura = Math.round((calorias*0.25)/9);
-  const carbs = Math.round((calorias-proteina*4-gordura*9)/4);
-  document.getElementById('formCard').style.display='none';
-  document.getElementById('loadingCard').classList.add('active');
-  document.getElementById('resultSection').classList.remove('active');
-  const promptUser = `Cria plano alimentar para: Nome: ${nome} | Idade: ${idade} anos | Genero: ${genero} | Altura: ${altura}cm | Peso: ${peso}kg | IMC: ${bmi} | TMB: ${tmb} kcal | TDEE: ${tdee} kcal | Calorias alvo: ${calorias} kcal | Actividade: ${actividade} | Objectivo: ${objetivo} | Macros: Proteina ${proteina}g | Carboidratos ${carbs}g | Gordura ${gordura}g. Apresenta um dia tipo com receitas detalhadas e lista de compras semanal com precos em MZN.`;
-  try {
-    const res = await fetch(proxyUrl, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:SYSTEM_PROMPT,messages:[{role:'user',content:promptUser}]})
-    });
-    if (!res.ok) { const err=await res.json().catch(()=>({})); throw new Error(err.error?.message||`Erro ${res.status}`); }
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message||'Erro da API');
-    const texto = data.content.map(b=>b.text||'').join('');
-    renderStats(bmi,calorias,proteina,gordura,tmb);
-    renderMacros(proteina,carbs,gordura,calorias);
-    renderPlano(texto,nome);
-    document.getElementById('loadingCard').classList.remove('active');
-    document.getElementById('resultSection').classList.add('active');
-    document.getElementById('resultSection').scrollIntoView({behavior:'smooth'});
-  } catch(e) {
-    document.getElementById('loadingCard').classList.remove('active');
-    document.getElementById('formCard').style.display='block';
-    mostrarErro('Erro: '+e.message+'. Verifica se o URL do Worker esta correcto e a API key esta configurada.');
-  }
-}
+    async function gerarPlano() {
+      const nome = document.getElementById('nome').value.trim();
+      const idade = document.getElementById('idade').value.trim();
+      const peso = document.getElementById('peso').value.trim();
+      const altura = document.getElementById('altura').value.trim();
 
-function renderStats(bmi,kcal,prot,fat,tmb) {
-  const b=parseFloat(bmi);
-  const status=b<18.5?'Abaixo do peso':b<25?'Normal ✓':b<30?'Sobrepeso':'Obesidade';
-  document.getElementById('statsGrid').innerHTML=`
-    <div class="stat-card"><div class="stat-value">${bmi}</div><div class="stat-unit">${status}</div><div class="stat-label">IMC</div></div>
-    <div class="stat-card"><div class="stat-value">${kcal}</div><div class="stat-unit">kcal/dia</div><div class="stat-label">Meta calórica</div></div>
-    <div class="stat-card"><div class="stat-value">${prot}g</div><div class="stat-unit">proteína</div><div class="stat-label">Por dia</div></div>
-    <div class="stat-card"><div class="stat-value">${tmb}</div><div class="stat-unit">kcal base</div><div class="stat-label">Metabolismo</div></div>`;
-}
+      if (!nome) return showError('⚠️ Por favor insira o seu nome.');
+      if (!idade || idade < 10 || idade > 99) return showError('⚠️ Insira uma idade válida (10–99).');
+      if (!peso || peso < 30) return showError('⚠️ Insira um peso válido.');
+      if (!altura || altura < 100) return showError('⚠️ Insira uma altura válida.');
+      if (!selectedGoal) return showError('⚠️ Selecione um objectivo (perder peso ou ganhar massa).');
 
-function renderMacros(prot,carbs,fat,total) {
-  const tot=prot*4+carbs*4+fat*9;
-  const pp=Math.round(prot*4/tot*100),cp=Math.round(carbs*4/tot*100),fp=100-pp-cp;
-  document.getElementById('macrosBar').innerHTML=`<div class="macro-seg macro-prot" style="flex:${pp}"></div><div class="macro-seg macro-carb" style="flex:${cp}"></div><div class="macro-seg macro-fat" style="flex:${fp}"></div>`;
-  document.getElementById('macroLegend').innerHTML=`<span><span class="macro-dot" style="background:var(--green-mid)"></span>Proteína ${pp}%</span><span><span class="macro-dot" style="background:var(--gold)"></span>Carboidratos ${cp}%</span><span><span class="macro-dot" style="background:#e07b3a"></span>Gordura ${fp}%</span>`;
-}
+      showError('');
+      document.getElementById('formCard').style.display = 'none';
+      document.getElementById('result').classList.remove('visible');
 
-function renderPlano(texto,nome) {
-  let html=texto
-    .replace(/^## (.*)/gm,'<h2>$1</h2>')
-    .replace(/^### (.*)/gm,'<h3>$1</h3>')
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-    .replace(/^[-*] (.*)/gm,'<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g,m=>`<ul>${m}</ul>`)
-    .replace(/\n\n+/g,'</p><p>');
-  const intro=`<div class="tip-box" style="margin-bottom:20px"><strong>Olá, ${nome}! 👋</strong><br>Aqui está o teu plano personalizado com ingredientes dos supermercados de Maputo. Bom proveito!</div>`;
-  document.getElementById('planContent').innerHTML=intro+`<div>${html}</div>`;
-}
+      const loadingEl = document.getElementById('loading');
+      loadingEl.classList.add('visible');
+      document.getElementById('loadingQuote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
 
-function novoPlano() {
-  document.getElementById('resultSection').classList.remove('active');
-  document.getElementById('formCard').style.display='block';
-  window.scrollTo({top:0,behavior:'smooth'});
-}
+      const imc = calcIMC(parseFloat(peso), parseFloat(altura));
+      const goalText = selectedGoal === 'perda' ? 'perda de peso (emagrecimento)' : 'ganho de massa muscular (hipertrofia)';
 
-function mostrarErro(msg) {
-  const el=document.getElementById('erroMsg');
-  el.textContent=msg;
-  el.classList.add('active');
-}
-</script>
+      const prompt = `És um nutricionista especializado. Com base nos dados abaixo, cria um plano alimentar diário detalhado e personalizado em Português Europeu.
+
+DADOS DO UTENTE:
+- Nome: ${nome}
+- Idade: ${idade} anos
+- Peso: ${peso} kg
+- Altura: ${altura} cm
+- IMC: ${imc}
+- Objectivo: ${goalText}
+
+INSTRUÇÕES:
+1. Calcula as calorias diárias recomendadas (usa a fórmula de Harris-Benedict).
+2. Define a divisão de macronutrientes (proteínas, hidratos de carbono, gorduras) adequada ao objectivo.
+3. Cria um plano alimentar completo para UM DIA, com 5-6 refeições: Pequeno-almoço, Lanche da manhã, Almoço, Lanche da tarde, Jantar, e (opcional) Ceia.
+4. Para cada refeição, lista os alimentos com as quantidades em gramas ou unidades.
+5. Indica as calorias aproximadas de cada refeição.
+6. Adiciona uma secção de dicas importantes e alimentos a evitar.
+7. Inclui uma nota motivacional personalizada para ${nome}.
+
+Usa títulos com ## para as secções principais e ### para as refeições. Usa listas com * para os alimentos. Sê específico, prático e motivador.`;
+
+      try {
+        // Rota segura que aponta para o seu backend Serverless na Vercel
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: prompt })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const errMsg = data?.error || 'Erro desconhecido no servidor.';
+          throw new Error(errMsg);
+        }
+
+        // Assume que a propriedade retornada pela sua Serverless Function chama-se "response"
+        const text = data?.response;
+        if (!text) throw new Error('Resposta vazia do servidor.');
+
+        loadingEl.classList.remove('visible');
+        renderResult(nome, peso, altura, imc, text);
+
+      } catch (err) {
+        loadingEl.classList.remove('visible');
+        document.getElementById('formCard').style.display = 'block';
+        showError('❌ Erro: ' + err.message);
+      }
+    }
+
+    function renderResult(nome, peso, altura, imc, markdown) {
+      const isMuscle = selectedGoal === 'massa';
+
+      const header = document.getElementById('resultHeader');
+      header.className = 'result-header' + (isMuscle ? ' muscle' : '');
+      document.getElementById('resultBadge').textContent = isMuscle ? '💪 Massa Muscular' : '🔥 Perda de Peso';
+      document.getElementById('resultTitle').textContent = `Plano de ${nome}`;
+      document.getElementById('resultSub').textContent = `Peso: ${peso}kg · Altura: ${altura}cm · IMC: ${imc}`;
+
+      const body = document.getElementById('resultBody');
+      body.innerHTML = markdownToHtml(markdown, isMuscle);
+
+      document.getElementById('result').classList.add('visible');
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function markdownToHtml(md, isMuscle) {
+      const muscleClass = isMuscle ? ' muscle-bg' : '';
+      let html = md
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^### (.+)$/gm, `<div class="meal-block${muscleClass}"><h3>$1</h3>`)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^[\*\-] (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+        .replace(/^(?!<[hul])(.+)$/gm, '<p>$1</p>');
+
+      const lines = html.split('\n');
+      let inBlock = false;
+      let out = [];
+      for (let line of lines) {
+        if (line.includes('class="meal-block')) { inBlock = true; out.push(line); continue; }
+        if (inBlock && line.startsWith('<h2>')) { out.push('</div>'); inBlock = false; }
+        out.push(line);
+      }
+      if (inBlock) out.push('</div>');
+      return out.join('\n');
+    }
+
+    function resetForm() {
+      document.getElementById('result').classList.remove('visible');
+      document.getElementById('formCard').style.display = 'block';
+      selectedGoal = null;
+      document.getElementById('btnPerda').classList.remove('active');
+      document.getElementById('btnMassa').classList.remove('active');
+      showError('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
 </body>
 </html>
